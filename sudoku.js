@@ -10,7 +10,6 @@ const puppeteer = require('puppeteer');
     await page.setViewport({ width: 1200, height: 720 });
 
     await page.goto('https://soduko-online.com/');
-    sleep(1000)
 
     let grid = await page.$$("#y6 > div > div > div")
 
@@ -26,7 +25,10 @@ const puppeteer = require('puppeteer');
     let newNewValues = []
     while (newValues.length) newNewValues.push(newValues.splice(0, 3));
 
+    console.log(newNewValues)
+
     getLine(newNewValues, 4)
+    getColumn(newNewValues, 5)
 
     showGrid(newNewValues);
 
@@ -34,8 +36,8 @@ const puppeteer = require('puppeteer');
 })()
 
 /**
- * Ajoute une methode sleep a JS 
- * @param milliseconds la duree d'attente
+ * It waits for a certain amount of time.
+ * @param milliseconds - The number of milliseconds to wait.
  */
 function sleep(milliseconds) {
     const date = Date.now();
@@ -45,19 +47,49 @@ function sleep(milliseconds) {
     } while (currentDate - date < milliseconds);
 }
 
-function getLine(cells, height) {
-    line = []
 
-    for (let i = 0; i <= height; i++) {
-        line.push(cells[i][height])
-        console.log(i);
-        console.log(cells[i]);
+/**
+ * Get a line of the grid
+ * @param cells - the grid
+ * @param number - The height of the line (0-8)
+ * @returns The line of cells (array) or null if heigt value is not valid
+ */
+function getLine(cells, number) {
+
+    if (number < 0 || number > 8) {
+        return null
     }
-    console.log(line)
+
+    let line = []
+    let startLine = Math.floor(number / 3) * 3
+
+    for (let i = startLine; i < startLine + 3; i++) {
+        line.push(cells[i][number % 3])
+    }
     return line
 }
 
+function getColumn(cells, number) {
+    if (number < 0 || number > 8) {
+        return null
+    }
 
+    for (let i = 0; i < 9; i++) {
+        console.log(Math.floor(i / 3) + i % 3 * 3);
+    }
+
+    let column = []
+
+    // number = 0,1,2 --> 0, 3, 6
+    // number = 3,4,5 --> 1, 4, 7
+    // number = 6,7,8 --> 2, 5, 8 
+}
+
+
+/**
+ * Prints out the grid in a nice format
+ * @param grid - the grid to be displayed
+ */
 function showGrid(grid) {
     console.log("+-----------------------------+");
     for (let h = 0; h < 3; h++) {
