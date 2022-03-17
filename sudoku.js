@@ -22,15 +22,36 @@ const puppeteer = require('puppeteer');
     let newValues = [];
     while (values.length) newValues.push(values.splice(0, 3));
 
-    let newNewValues = []
-    while (newValues.length) newNewValues.push(newValues.splice(0, 3));
+    let allCells = []
+    while (newValues.length) allCells.push(newValues.splice(0, 3));
 
-    console.log(newNewValues)
+    let lines = []
+    let columns = []
+    let squares = []
 
-    getLine(newNewValues, 4)
-    getColumn(newNewValues, 5)
+    for (let i = 0; i < 9; i++) {
+        lines.push(getLine(allCells, i))
+        columns.push(getColumn(allCells, i))
+        squares.push(getSquare(allCells, i))
+    }
 
-    showGrid(newNewValues);
+    console.log(lines.length);
+
+    console.log("Lines");
+    console.log(lines);
+    console.log("Columns");
+    console.log(columns);
+    console.log("Squares");
+    console.log(squares);
+
+
+    // Check if one left in each square
+    // Check if one left in each row and column
+    // For each number, check where the placement is obvious
+    // Repeat until complete
+
+
+    showGrid(allCells);
 
 
 })()
@@ -73,18 +94,29 @@ function getColumn(cells, number) {
     if (number < 0 || number > 8) {
         return null
     }
+    let column = []
 
     let startColumn = Math.floor(number / 3)
 
-    for (let i = 0; i < 9; i++) {
-        console.log(Math.floor(i / 3) + i % 3 * 3);
+    for (let i = startColumn; i <= startColumn + 6; i += 3) {
+        current = []
+        for (let j = 0; j < 3; j++) {
+            current.push(cells[i][j][number % 3])
+        }
+        column.push(current)
     }
 
-    let column = []
+    return column
+}
 
-    // number = 0,1,2 --> 0, 3, 6
-    // number = 3,4,5 --> 1, 4, 7
-    // number = 6,7,8 --> 2, 5, 8 
+function getSquare(cells, number) {
+    if (number < 0 || number > 8) {
+        return null
+    }
+
+    return cells[number]
+
+
 }
 
 
