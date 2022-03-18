@@ -45,14 +45,22 @@ const puppeteer = require('puppeteer');
     console.log(squares);
 
 
+    let solved = false
+
+    // while (!solved) {
+
+    // }
+
+    for (let line of lines) {
+        console.log(getMissingNumbers(line));
+    }
+
     // Check if one left in each square
     // Check if one left in each row and column
     // For each number, check where the placement is obvious
     // Repeat until complete
 
-
     showGrid(allCells);
-
 
 })()
 
@@ -70,10 +78,10 @@ function sleep(milliseconds) {
 
 
 /**
- * Get a line of the grid
- * @param cells - the grid
- * @param number - The height of the line (0-8)
- * @returns The line of cells (array) or null if heigt value is not valid
+ * Given a list of cells, return a list of the cells in the same line
+ * @param cells - the array of cells
+ * @param number - The number of the line you want to get.
+ * @returns A list of the cells in the line.
  */
 function getLine(cells, number) {
 
@@ -90,6 +98,27 @@ function getLine(cells, number) {
     return line
 }
 
+function getMissingNumbers(current) {
+    let numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+    let numbersInLine = []
+
+    for (let subCurrent of current) {
+        for (let val of subCurrent) {
+            if (val != ' ') {
+                numbersInLine.push(parseInt(val))
+            }
+        }
+    }
+
+    return numbers.filter(x => !numbersInLine.includes(x));
+}
+
+/**
+ * Given a list of cells, return a list of the cells in the same column as the given cell
+ * @param cells - The array of arrays that contains the cells.
+ * @param number - The number of the column you want to get.
+ * @returns a list of lists. Each list is a column of the sudoku.
+ */
 function getColumn(cells, number) {
     if (number < 0 || number > 8) {
         return null
@@ -105,20 +134,21 @@ function getColumn(cells, number) {
         }
         column.push(current)
     }
-
     return column
 }
 
+/**
+ * Return the square at the given index
+ * @param cells - an array of 9 cells
+ * @param number - The number of the square you want to get.
+ * @returns the square
+ */
 function getSquare(cells, number) {
     if (number < 0 || number > 8) {
         return null
     }
-
     return cells[number]
-
-
 }
-
 
 /**
  * Prints out the grid in a nice format
