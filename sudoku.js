@@ -37,22 +37,27 @@ const puppeteer = require('puppeteer');
 
     let solved = false
 
-    while (!solved) {
+    // while (!solved) {
+    for (let j = 0; j < 100; j++) {
+        console.log("-------------------------------------------------------------------------------------------------");
         for (let i = 0; i < 9; i++) {
             complete(lines[i], "Ligne", i, page)
             complete(columns[i], "Colonne", i, page)
             complete(squares[i], "Squares", i, page)
         }
-
-        solved = isSolved(squares)
     }
+
+
+    solved = isSolved(squares)
+    console.log(solved);
+    // }
 
     // Check if one left in each square (done)
     // Check if one left in each row and column (done)
     // For each number, check where the placement is obvious
     // Repeat until complete
 
-    // showGrid(allCells);
+    showGrid(allCells);
 
 })()
 
@@ -71,7 +76,7 @@ function sleep(milliseconds) {
 function isSolved(squares) {
     solved = true
     for (let square of squares) {
-        solved = getMissingNumbers(square) != []
+        solved = getMissingNumbers(square) == []
     }
     return solved
 }
@@ -115,6 +120,7 @@ function getMissingNumbers(current) {
 
 async function complete(zone, zoneType, zoneIndex, page) {
     let toAdd = getMissingNumbers(zone)
+    console.log("----> " + toAdd.length + " " + zoneType);
     if (toAdd.length != 1) {
         return null
     }
