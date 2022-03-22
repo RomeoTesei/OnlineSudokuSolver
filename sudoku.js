@@ -1,3 +1,8 @@
+let lines = []
+let columns = []
+let squares = []
+let allCells = []
+
 const puppeteer = require('puppeteer');
 
 (async() => {
@@ -22,40 +27,49 @@ const puppeteer = require('puppeteer');
     let newValues = [];
     while (values.length) newValues.push(values.splice(0, 3));
 
-    let allCells = []
     while (newValues.length) allCells.push(newValues.splice(0, 3));
 
-    let lines = []
-    let columns = []
-    let squares = []
 
     for (let i = 0; i < 9; i++) {
-        lines.push(getLine(allCells, i))
-        columns.push(getColumn(allCells, i))
-        squares.push(getSquare(allCells, i))
+        lines.push(getLine(i))
+        columns.push(getColumn(i))
+        squares.push(getSquare(i))
     }
 
     let solved = false
 
     // while (!solved) {
-    for (let j = 0; j < 100; j++) {
-        console.log("-------------------------------------------------------------------------------------------------");
-        for (let i = 0; i < 9; i++) {
-            complete(lines[i], "Ligne", i, page)
-            complete(columns[i], "Colonne", i, page)
-            complete(squares[i], "Squares", i, page)
-        }
-    }
+    // for (let j = 0; j < 100; j++) {
+    //     console.log("-------------------------------------------------------------------------------------------------");
+    //     for (let i = 0; i < 9; i++) {
+    //         complete(lines[i], "Ligne", i, page)
+    //         complete(columns[i], "Colonne", i, page)
+    //         complete(squares[i], "Squares", i, page)
+    //     }
+    // }
+
+    // for (let boucle = 0; boucle < 10; boucle++) {
+    //     for (let i = 1; i <= 9; i++) {
+    //         let squaresToCheck = getSquaresWithout(i)
+    //         for (let currentSquareI of squaresToCheck) {
+    //             console.log(i, squares[currentSquareI]);
+    //         }
+    //     }
+
+    // }
+
+
 
 
     solved = isSolved(squares)
-    console.log(solved);
-    // }
+        // }
 
     // Check if one left in each square (done)
     // Check if one left in each row and column (done)
     // For each number, check where the placement is obvious
     // Repeat until complete
+
+    completeIfObvious(4)
 
     showGrid(allCells);
 
@@ -73,12 +87,28 @@ function sleep(milliseconds) {
     } while (currentDate - date < milliseconds);
 }
 
-function isSolved(squares) {
+function isSolved() {
     solved = true
     for (let square of squares) {
         solved = getMissingNumbers(square) == []
     }
     return solved
+}
+
+/**
+ * Given a number, return the indices of the squares that do not contain that number
+ * @param number - The number to check for.
+ * @returns An array of the squares that do not contain the number.
+ */
+function getSquaresWithout(number) {
+    let result = []
+    for (let i = 0; i < squares.length; i++) {
+        zone = squares[i].flat()
+        if (!zone.includes(number.toString())) {
+            result.push(i)
+        }
+    }
+    return result
 }
 
 /**
@@ -118,7 +148,47 @@ function getMissingNumbers(current) {
     return numbers.filter(x => !numbersInZone.includes(x));
 }
 
-async function complete(zone, zoneType, zoneIndex, page) {
+function completeIfObvious(currentSquareIndex) {
+    let contenu = squares[currentSquareIndex].flat()
+
+    let possible = {}
+
+    for (let i = 0; i < contenu.length; i++) {
+        possible[i] = []
+        let rowOfSquare = Math.floor(currentSquareIndex / 3)
+        let colOfSquare = currentSquareIndex % 3
+        let cellX = colOfSquare + (i % 3) + (colOfSquare * 2)
+        let cellY = rowOfSquare + Math.floor(i / 3) + (rowOfSquare * 2)
+
+        let currentCol = getColumn(cellX)
+        let currentLine = getLine(cellY)
+
+
+
+        if (!(currentCol.includes(i.toString()) || currentLine.includes(i.toString()))) {
+            possible[i].push(i)
+        }
+
+        console.log(i + "---------------------------");
+        console.log("col", currentCol);
+        console.log("line", currentLine);
+        console.log("----------------------------");
+        console.log();
+
+    }
+
+
+    console.log("Possible ---------------------------");
+    console.log("possible", possible);
+    console.log("------------------------------------");
+
+
+
+}
+
+
+
+async function completeIfOneLeft(zone, zoneType, zoneIndex, page) {
     let toAdd = getMissingNumbers(zone)
     console.log("----> " + toAdd.length + " " + zoneType);
     if (toAdd.length != 1) {
@@ -155,7 +225,7 @@ async function complete(zone, zoneType, zoneIndex, page) {
  * @param number - The number of the line you want to get.
  * @returns A list of the cells in the line.
  */
-function getLine(cells, number) {
+function getLine(number) {
 
     if (number < 0 || number > 8) {
         return null
@@ -165,7 +235,7 @@ function getLine(cells, number) {
     let startLine = Math.floor(number / 3) * 3
 
     for (let i = startLine; i < startLine + 3; i++) {
-        line.push(cells[i][number % 3])
+        line.push(allCells[i][number % 3])
     }
     return line
 }
@@ -176,7 +246,7 @@ function getLine(cells, number) {
  * @param number - The number of the column you want to get.
  * @returns a list of lists. Each list is a column of the sudoku.
  */
-function getColumn(cells, number) {
+function getColumn(number) {
     if (number < 0 || number > 8) {
         return null
     }
@@ -187,7 +257,7 @@ function getColumn(cells, number) {
     for (let i = startColumn; i <= startColumn + 6; i += 3) {
         current = []
         for (let j = 0; j < 3; j++) {
-            current.push(cells[i][j][number % 3])
+            current.push(allCells[i][j][number % 3])
         }
         column.push(current)
     }
@@ -200,11 +270,11 @@ function getColumn(cells, number) {
  * @param number - The number of the square you want to get.
  * @returns the square
  */
-function getSquare(cells, number) {
+function getSquare(number) {
     if (number < 0 || number > 8) {
         return null
     }
-    return cells[number]
+    return allCells[number]
 }
 
 /**
