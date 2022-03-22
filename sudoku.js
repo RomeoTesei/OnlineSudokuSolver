@@ -35,34 +35,24 @@ const puppeteer = require('puppeteer');
         squares.push(getSquare(allCells, i))
     }
 
-    console.log(lines.length);
-
-    console.log("Lines");
-    console.log(lines);
-    console.log("Columns");
-    console.log(columns);
-    console.log("Squares");
-    console.log(squares);
-
-
-    await addNumber(1, 0, 0, page)
-
     let solved = false
 
-    // while (!solved) {
+    while (!solved) {
+        for (let i = 0; i < 9; i++) {
+            complete(lines[i], "Ligne", i, page)
+            complete(columns[i], "Colonne", i, page)
+            complete(squares[i], "Squares", i, page)
+        }
 
-    // }
-
-    for (let line of lines) {
-        console.log(getMissingNumbers(line));
+        solved = isSolved(squares)
     }
 
-    // Check if one left in each square
-    // Check if one left in each row and column
+    // Check if one left in each square (done)
+    // Check if one left in each row and column (done)
     // For each number, check where the placement is obvious
     // Repeat until complete
 
-    showGrid(allCells);
+    // showGrid(allCells);
 
 })()
 
@@ -76,6 +66,14 @@ function sleep(milliseconds) {
     do {
         currentDate = Date.now();
     } while (currentDate - date < milliseconds);
+}
+
+function isSolved(squares) {
+    solved = true
+    for (let square of squares) {
+        solved = getMissingNumbers(square) != []
+    }
+    return solved
 }
 
 /**
@@ -115,7 +113,7 @@ function getMissingNumbers(current) {
     return numbers.filter(x => !numbersInZone.includes(x));
 }
 
-async function complete(zone, zoneIndex, page) {
+async function complete(zone, zoneType, zoneIndex, page) {
     let toAdd = getMissingNumbers(zone)
     if (toAdd.length != 1) {
         return null
@@ -128,7 +126,20 @@ async function complete(zone, zoneIndex, page) {
         }
     }
 
-    await addNumber(toAdd[0], zoneIndex, index, page)
+    if (zoneType == "Colonne") {
+        await addNumber(toAdd[0], zoneIndex, index, page)
+    } else if (zoneType == "Ligne") {
+        await addNumber(toAdd[0], index, zoneIndex, page)
+    } else {
+        let rowOfSquare = Math.floor(zoneIndex / 3)
+        let colOfSquare = zoneIndex % 3
+        let cellX = colOfSquare + (index % 3) + (colOfSquare * 2)
+        let cellY = rowOfSquare + Math.floor(index / 3) + (rowOfSquare * 2)
+
+
+        await addNumber(toAdd[0], cellX, cellY, page)
+    }
+
 }
 
 
