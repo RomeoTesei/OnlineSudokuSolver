@@ -45,6 +45,8 @@ const puppeteer = require('puppeteer');
     console.log(squares);
 
 
+    await addNumber(1, 0, 0, page)
+
     let solved = false
 
     // while (!solved) {
@@ -76,6 +78,59 @@ function sleep(milliseconds) {
     } while (currentDate - date < milliseconds);
 }
 
+/**
+ * It adds a number to a cell on the sudoku board.
+ * @param number - The number to be added to the cell.
+ * @param cellX - The x coordinate of the cell.
+ * @param cellY - The y coordinate of the cell.
+ * @param page - the page object
+ * @returns Nothing.
+ */
+async function addNumber(number, cellX, cellY, page) {
+    if (number <= 0 || number > 9) {
+        return null
+    }
+    let cell = await page.$("#vc_" + cellX + "_" + cellY)
+    await cell.click()
+    sleep(500)
+    await page.keyboard.press(number)
+}
+
+/**
+ * Given a list of numbers, return a list of numbers that are not in the list
+ * @param current - the current state of the board
+ * @returns The missing numbers in the zone.
+ */
+function getMissingNumbers(current) {
+    let numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+    let numbersInZone = []
+
+    for (let subCurrent of current) {
+        for (let val of subCurrent) {
+            if (val != ' ') {
+                numbersInZone.push(parseInt(val))
+            }
+        }
+    }
+    return numbers.filter(x => !numbersInZone.includes(x));
+}
+
+async function complete(zone, zoneIndex, page) {
+    let toAdd = getMissingNumbers(zone)
+    if (toAdd.length != 1) {
+        return null
+    }
+    zone = zone.flat()
+    index = -1
+    for (let i = 0; i < zone.length; i++) {
+        if (zone[i] == ' ') {
+            index = i
+        }
+    }
+
+    await addNumber(toAdd[0], zoneIndex, index, page)
+}
+
 
 /**
  * Given a list of cells, return a list of the cells in the same line
@@ -96,21 +151,6 @@ function getLine(cells, number) {
         line.push(cells[i][number % 3])
     }
     return line
-}
-
-function getMissingNumbers(current) {
-    let numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9]
-    let numbersInLine = []
-
-    for (let subCurrent of current) {
-        for (let val of subCurrent) {
-            if (val != ' ') {
-                numbersInLine.push(parseInt(val))
-            }
-        }
-    }
-
-    return numbers.filter(x => !numbersInLine.includes(x));
 }
 
 /**
