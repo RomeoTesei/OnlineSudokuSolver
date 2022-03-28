@@ -59,15 +59,10 @@ const puppeteer = require('puppeteer');
     // }
 
 
-
-
-    solved = isSolved(squares)
-        // }
-
-    // Check if one left in each square (done)
-    // Check if one left in each row and column (done)
-    // For each number, check where the placement is obvious
-    // Repeat until complete
+    for (let i = 0; i < 9; i++) {
+        console.log(i);
+        console.log(getPossibles(i));
+    }
 
     completeIfObvious(4)
 
@@ -148,42 +143,65 @@ function getMissingNumbers(current) {
     return numbers.filter(x => !numbersInZone.includes(x));
 }
 
-function completeIfObvious(currentSquareIndex) {
+/**
+ * Given a square, return a dictionary of possible values for each cell in the square
+ * @param currentSquareIndex - the index of the square we're currently working on
+ * @returns A dictionary with the index of the square as key and a list of possible numbers as value.
+ */
+function getPossibles(currentSquareIndex) {
     let contenu = squares[currentSquareIndex].flat()
 
     let possible = {}
 
     for (let i = 0; i < contenu.length; i++) {
         possible[i] = []
-        let rowOfSquare = Math.floor(currentSquareIndex / 3)
-        let colOfSquare = currentSquareIndex % 3
-        let cellX = colOfSquare + (i % 3) + (colOfSquare * 2)
-        let cellY = rowOfSquare + Math.floor(i / 3) + (rowOfSquare * 2)
+        if (contenu[i] == ' ') {
+            let rowOfSquare = Math.floor(currentSquareIndex / 3)
+            let colOfSquare = currentSquareIndex % 3
+            let cellX = colOfSquare + (i % 3) + (colOfSquare * 2)
+            let cellY = rowOfSquare + Math.floor(i / 3) + (rowOfSquare * 2)
 
-        let currentCol = getColumn(cellX)
-        let currentLine = getLine(cellY)
+            let currentCol = getColumn(cellX)
+            let currentLine = getLine(cellY)
 
-
-
-        if (!(currentCol.includes(i.toString()) || currentLine.includes(i.toString()))) {
-            possible[i].push(i)
+            for (let j = 1; j <= 9; j++) {
+                if (!(currentCol.flat().includes(j.toString())) && !(currentLine.flat().includes(j.toString())) && !(contenu.includes(j.toString()))) {
+                    possible[i].push(j)
+                }
+            }
         }
+    }
+    return possible
+}
 
-        console.log(i + "---------------------------");
-        console.log("col", currentCol);
-        console.log("line", currentLine);
-        console.log("----------------------------");
-        console.log();
+async function completeIfObvious(currentSquareIndex) {
+    let possibles = getPossibles(currentSquareIndex)
+    let interessants = {}
+    let occurences = {}
+    for (let key in possibles) {
+        if (possibles[key].length) {
 
+            for (let val of possibles[key]) {
+
+                if (Object.keys(occurences).includes(val.toString())) {
+                    occurences[val]++
+                } else {
+                    occurences[val] = 1
+                }
+            }
+
+
+            interessants[key] = possibles[key]
+        }
     }
 
+    console.log("interessants ", interessants);
 
-    console.log("Possible ---------------------------");
-    console.log("possible", possible);
-    console.log("------------------------------------");
+    for (let key of Object.keys(occurences)) {
+        if (occurences[key] == 1) { // si cette valeur n'apparait qu'une fois
 
-
-
+        }
+    }
 }
 
 
