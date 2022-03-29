@@ -16,7 +16,40 @@ const puppeteer = require('puppeteer');
 
     await page.goto('https://soduko-online.com/');
 
+    await setGrid(page)
+
+    while (!isSolved()) {
+        await setGrid(page)
+        for (let i = 0; i < 9; i++) {
+            await completeIfObvious(i, page)
+        }
+        showGrid(allCells)
+    }
+})()
+
+/**
+ * It waits for a certain amount of time.
+ * @param milliseconds - The number of milliseconds to wait.
+ */
+function sleep(milliseconds) {
+    const date = Date.now();
+    let currentDate = null;
+    do {
+        currentDate = Date.now();
+    } while (currentDate - date < milliseconds);
+}
+
+/**
+ * It gets the grid from the page.
+ * @param page - the page to run the script on
+ */
+async function setGrid(page) {
     let grid = await page.$$("#y6 > div > div > div")
+
+    lines = []
+    columns = []
+    squares = []
+    allCells = []
 
     let values = []
 
@@ -35,51 +68,6 @@ const puppeteer = require('puppeteer');
         columns.push(getColumn(i))
         squares.push(getSquare(i))
     }
-
-    let solved = false
-
-    // while (!solved) {
-    // for (let j = 0; j < 100; j++) {
-    //     console.log("-------------------------------------------------------------------------------------------------");
-    //     for (let i = 0; i < 9; i++) {
-    //         complete(lines[i], "Ligne", i, page)
-    //         complete(columns[i], "Colonne", i, page)
-    //         complete(squares[i], "Squares", i, page)
-    //     }
-    // }
-
-    // for (let boucle = 0; boucle < 10; boucle++) {
-    //     for (let i = 1; i <= 9; i++) {
-    //         let squaresToCheck = getSquaresWithout(i)
-    //         for (let currentSquareI of squaresToCheck) {
-    //             console.log(i, squares[currentSquareI]);
-    //         }
-    //     }
-
-    // }
-
-
-    for (let i = 0; i < 9; i++) {
-        console.log(i);
-        console.log(getPossibles(i));
-    }
-
-    completeIfObvious(4)
-
-    showGrid(allCells);
-
-})()
-
-/**
- * It waits for a certain amount of time.
- * @param milliseconds - The number of milliseconds to wait.
- */
-function sleep(milliseconds) {
-    const date = Date.now();
-    let currentDate = null;
-    do {
-        currentDate = Date.now();
-    } while (currentDate - date < milliseconds);
 }
 
 function isSolved() {
@@ -118,10 +106,9 @@ async function addNumber(number, cellX, cellY, page) {
     if (number <= 0 || number > 9) {
         return null
     }
-    let cell = await page.$("#vc_" + cellX + "_" + cellY)
-    await cell.click()
-    sleep(500)
+    await page.click("#vc_" + cellX + "_" + cellY, { button: "left" })
     await page.keyboard.press(number)
+    sleep(1000)
 }
 
 /**
@@ -156,13 +143,11 @@ function getPossibles(currentSquareIndex) {
     for (let i = 0; i < contenu.length; i++) {
         possible[i] = []
         if (contenu[i] == ' ') {
-            let rowOfSquare = Math.floor(currentSquareIndex / 3)
-            let colOfSquare = currentSquareIndex % 3
-            let cellX = colOfSquare + (i % 3) + (colOfSquare * 2)
-            let cellY = rowOfSquare + Math.floor(i / 3) + (rowOfSquare * 2)
 
-            let currentCol = getColumn(cellX)
-            let currentLine = getLine(cellY)
+            let co = getCoWithIndices(currentSquareIndex, i)
+
+            let currentCol = getColumn(co[0])
+            let currentLine = getLine(co[1])
 
             for (let j = 1; j <= 9; j++) {
                 if (!(currentCol.flat().includes(j.toString())) && !(currentLine.flat().includes(j.toString())) && !(contenu.includes(j.toString()))) {
@@ -174,7 +159,7 @@ function getPossibles(currentSquareIndex) {
     return possible
 }
 
-async function completeIfObvious(currentSquareIndex) {
+async function completeIfObvious(currentSquareIndex, page) {
     let possibles = getPossibles(currentSquareIndex)
     let interessants = {}
     let occurences = {}
@@ -195,16 +180,25 @@ async function completeIfObvious(currentSquareIndex) {
         }
     }
 
-    console.log("interessants ", interessants);
+    console.log("occurences ", occurences, currentSquareIndex);
 
     for (let key of Object.keys(occurences)) {
         if (occurences[key] == 1) { // si cette valeur n'apparait qu'une fois
+            for (let keyI of Object.keys(interessants)) {
+                if (interessants[keyI].includes(parseInt(key))) {
 
+                    // keyI = cell index where 'key' needs to be placed
+                    // find cell coo to placed key
+
+                    let co = getCoWithIndices(currentSquareIndex, keyI)
+
+                    await addNumber(key, co[0], co[1], page)
+
+                }
+            }
         }
     }
 }
-
-
 
 async function completeIfOneLeft(zone, zoneType, zoneIndex, page) {
     let toAdd = getMissingNumbers(zone)
@@ -225,17 +219,28 @@ async function completeIfOneLeft(zone, zoneType, zoneIndex, page) {
     } else if (zoneType == "Ligne") {
         await addNumber(toAdd[0], index, zoneIndex, page)
     } else {
-        let rowOfSquare = Math.floor(zoneIndex / 3)
-        let colOfSquare = zoneIndex % 3
-        let cellX = colOfSquare + (index % 3) + (colOfSquare * 2)
-        let cellY = rowOfSquare + Math.floor(index / 3) + (rowOfSquare * 2)
+        let co = getCoWithIndices(zoneIndex, index)
 
-
-        await addNumber(toAdd[0], cellX, cellY, page)
+        await addNumber(toAdd[0], co[0], co[1], page)
     }
 
 }
 
+/**
+ * Given a zone index and a cell index, return the x and y coordinates of the cell
+ * @param zoneIndex - The index of the zone (0-8)
+ * @param cellIndex - The index of the cell in the zone.
+ * @returns The coordinates of the cell in the grid.
+ */
+function getCoWithIndices(zoneIndex, cellIndex) {
+
+    let rowOfSquare = Math.floor(zoneIndex / 3)
+    let colOfSquare = zoneIndex % 3
+    let cellX = colOfSquare + (cellIndex % 3) + (colOfSquare * 2)
+    let cellY = rowOfSquare + Math.floor(cellIndex / 3) + (rowOfSquare * 2)
+
+    return [cellX, cellY]
+}
 
 /**
  * Given a list of cells, return a list of the cells in the same line
