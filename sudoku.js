@@ -180,15 +180,22 @@ async function completeIfObvious(currentSquareIndex, page) {
         }
     }
 
-    console.log("occurences ", occurences, currentSquareIndex);
+    console.log("interessants ", interessants);
+
+    for (let key of Object.keys(interessants)) {
+        if (interessants[key].length == 1) {
+            let co = getCoWithIndices(currentSquareIndex, key)
+            await addNumber(interessants[key][0], co[0], co[1], page)
+        }
+    }
+
+
+    console.log("occurences ", occurences);
 
     for (let key of Object.keys(occurences)) {
-        if (occurences[key] == 1) { // si cette valeur n'apparait qu'une fois
+        if (occurences[key] == 1) {
             for (let keyI of Object.keys(interessants)) {
                 if (interessants[keyI].includes(parseInt(key))) {
-
-                    // keyI = cell index where 'key' needs to be placed
-                    // find cell coo to placed key
 
                     let co = getCoWithIndices(currentSquareIndex, keyI)
 
