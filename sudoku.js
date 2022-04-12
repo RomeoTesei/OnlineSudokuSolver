@@ -130,13 +130,17 @@ function getMissingNumbers(current) {
     return numbers.filter(x => !numbersInZone.includes(x));
 }
 
+function flat(toFlat) {
+    return [].concat(...toFlat)
+}
+
 /**
  * Given a square, return a dictionary of possible values for each cell in the square
  * @param currentSquareIndex - the index of the square we're currently working on
  * @returns A dictionary with the index of the square as key and a list of possible numbers as value.
  */
 function getPossibles(currentSquareIndex) {
-    let contenu = squares[currentSquareIndex].flat()
+    let contenu = flat(squares[currentSquareIndex])
 
     let possible = {}
 
@@ -150,7 +154,7 @@ function getPossibles(currentSquareIndex) {
             let currentLine = getLine(co[1])
 
             for (let j = 1; j <= 9; j++) {
-                if (!(currentCol.flat().includes(j.toString())) && !(currentLine.flat().includes(j.toString())) && !(contenu.includes(j.toString()))) {
+                if (!(flat(currentCol).includes(j.toString())) && !(flat(currentLine).includes(j.toString())) && !(contenu.includes(j.toString()))) {
                     possible[i].push(j)
                 }
             }
